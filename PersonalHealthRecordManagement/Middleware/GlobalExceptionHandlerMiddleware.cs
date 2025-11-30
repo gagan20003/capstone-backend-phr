@@ -34,8 +34,8 @@ namespace PersonalHealthRecordManagement.Middleware
 
             switch (exception)
             {
-                case ArgumentException:
                 case ArgumentNullException:
+                case ArgumentException:
                     code = HttpStatusCode.BadRequest;
                     result = JsonSerializer.Serialize(new { error = exception.Message });
                     break;

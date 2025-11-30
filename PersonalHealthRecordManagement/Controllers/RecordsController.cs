@@ -25,7 +25,7 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<List<MedicalRecords>>> GetMyRecords()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
 
             var records = await _medicalRecordService.GetForUserAsync(userId);
             return Ok(records);
@@ -38,10 +38,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<MedicalRecords>> GetMyRecord(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
 
             var record = await _medicalRecordService.GetByIdForUserAsync(userId, id);
-            if (record == null) return NotFoundResponse("Medical record not found");
+            if (record == null) return NotFoundResponse<MedicalRecords>("Medical record not found");
 
             return Ok(record);
         }
@@ -58,7 +58,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
 
             try
             {
@@ -85,10 +85,10 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
 
             var updated = await _medicalRecordService.UpdateForUserAsync(userId, id, dto);
-            if (updated == null) return NotFoundResponse("Medical record not found");
+            if (updated == null) return NotFoundResponse<MedicalRecords>("Medical record not found");
 
             _logger.LogInformation("Medical record updated: RecordId={RecordId}, UserId={UserId}", id, userId);
             return Ok(updated);
@@ -101,10 +101,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<IActionResult> DeleteRecord(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return Unauthorized();
 
             var success = await _medicalRecordService.DeleteForUserAsync(userId, id);
-            if (!success) return NotFoundResponse("Medical record not found");
+            if (!success) return NotFound();
 
             _logger.LogInformation("Medical record deleted: RecordId={RecordId}, UserId={UserId}", id, userId);
             return NoContent();

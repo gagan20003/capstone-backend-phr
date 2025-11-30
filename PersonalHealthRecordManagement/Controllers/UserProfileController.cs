@@ -25,10 +25,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<UserProfile>> GetMyProfile()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<UserProfile>();
 
             var profile = await _userProfileService.GetForUserAsync(userId);
-            if (profile == null) return NotFoundResponse("Profile not found for current user");
+            if (profile == null) return NotFoundResponse<UserProfile>("Profile not found for current user");
 
             return Ok(profile);
         }
@@ -45,7 +45,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<UserProfile>();
 
             try
             {
@@ -56,7 +56,7 @@ namespace PersonalHealthRecordManagement.Controllers
             catch (InvalidOperationException ex)
             {
                 _logger.LogWarning(ex, "Invalid operation while upserting profile: UserId={UserId}", userId);
-                return BadRequestResponse(ex.Message);
+                return BadRequestResponse<UserProfile>(ex.Message);
             }
         }
     }

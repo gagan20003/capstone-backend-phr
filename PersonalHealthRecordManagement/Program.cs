@@ -93,8 +93,7 @@ namespace PersonalHealthRecordManagement
             });
 
             // Health Checks
-            builder.Services.AddHealthChecks()
-                .AddDbContextCheck<AppDbContext>();
+            builder.Services.AddHealthChecks();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -134,17 +133,17 @@ namespace PersonalHealthRecordManagement
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                
                 // Apply migrations (recommended to use dotnet ef migrations add / update in development)
                 try
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogInformation("Applying database migrations...");
                     db.Database.Migrate();
                     logger.LogInformation("Database migrations applied successfully.");
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred while applying database migrations");
                     // In production, you might want to fail fast or handle this differently
                     if (!app.Environment.IsDevelopment())
@@ -152,7 +151,6 @@ namespace PersonalHealthRecordManagement
                         throw;
                     }
                 }
-                var logger = services.GetRequiredService<ILogger<Program>>();
                 var roles = new[] { "Admin", "User" };
                 foreach (var role in roles)
                 {

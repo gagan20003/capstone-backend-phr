@@ -13,17 +13,17 @@ namespace PersonalHealthRecordManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier);
         }
 
-        protected IActionResult UnauthorizedResponse(string message = "Unauthorized")
+        protected ActionResult<T> UnauthorizedResponse<T>(string message = "Unauthorized")
         {
             return Unauthorized(new { error = message });
         }
 
-        protected IActionResult NotFoundResponse(string message = "Resource not found")
+        protected ActionResult<T> NotFoundResponse<T>(string message = "Resource not found")
         {
             return NotFound(new { error = message });
         }
 
-        protected IActionResult BadRequestResponse(string message)
+        protected ActionResult<T> BadRequestResponse<T>(string message)
         {
             return BadRequest(new { error = message });
         }

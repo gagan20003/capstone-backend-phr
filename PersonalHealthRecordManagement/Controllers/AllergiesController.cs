@@ -25,7 +25,7 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<List<Allergies>>> GetMyAllergies()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<List<Allergies>>();
 
             var allergies = await _allergyService.GetForUserAsync(userId);
             return Ok(allergies);
@@ -38,10 +38,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<Allergies>> GetMyAllergy(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Allergies>();
 
             var allergy = await _allergyService.GetByIdForUserAsync(userId, id);
-            if (allergy == null) return NotFoundResponse("Allergy not found");
+            if (allergy == null) return NotFoundResponse<Allergies>("Allergy not found");
 
             return Ok(allergy);
         }
@@ -58,7 +58,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Allergies>();
 
             try
             {
@@ -85,7 +85,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Allergies>();
 
             var updated = await _allergyService.UpdateForUserAsync(userId, id, dto);
             if (updated == null) return NotFoundResponse("Allergy not found");
@@ -101,10 +101,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<IActionResult> DeleteMyAllergy(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return Unauthorized();
 
             var success = await _allergyService.DeleteForUserAsync(userId, id);
-            if (!success) return NotFoundResponse("Allergy not found");
+            if (!success) return NotFound();
 
             _logger.LogInformation("Allergy deleted: AllergyId={AllergyId}, UserId={UserId}", id, userId);
             return NoContent();

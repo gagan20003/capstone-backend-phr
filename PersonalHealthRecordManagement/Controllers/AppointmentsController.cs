@@ -30,12 +30,12 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Appointments>();
 
             // Business rule: Appointment date should not be in the past
             if (dto.AppointmentDate < DateTime.UtcNow)
             {
-                return BadRequestResponse("Appointment date cannot be in the past");
+                return BadRequestResponse<Appointments>("Appointment date cannot be in the past");
             }
 
             try
@@ -58,7 +58,7 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<List<Appointments>>> GetAppointments()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Appointments>();
 
             var appointments = await _appointmentService.GetForUserAsync(userId);
             return Ok(appointments);
@@ -71,10 +71,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<Appointments>> GetAppointment(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Appointments>();
 
             var appointment = await _appointmentService.GetByIdForUserAsync(userId, id);
-            if (appointment == null) return NotFoundResponse("Appointment not found");
+            if (appointment == null) return NotFoundResponse<Appointments>("Appointment not found");
 
             return Ok(appointment);
         }
@@ -91,16 +91,16 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return UnauthorizedResponse<Appointments>();
 
             // Business rule: Appointment date should not be in the past
             if (dto.AppointmentDate < DateTime.UtcNow)
             {
-                return BadRequestResponse("Appointment date cannot be in the past");
+                return BadRequestResponse<Appointments>("Appointment date cannot be in the past");
             }
 
             var updated = await _appointmentService.UpdateForUserAsync(userId, id, dto);
-            if (updated == null) return NotFoundResponse("Appointment not found");
+            if (updated == null) return NotFoundResponse<Appointments>("Appointment not found");
 
             _logger.LogInformation("Appointment updated: AppointmentId={AppointmentId}, UserId={UserId}", id, userId);
             return Ok(updated);
@@ -113,10 +113,10 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<IActionResult> DeleteAppointment(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse();
+            if (userId == null) return Unauthorized();
 
             var success = await _appointmentService.DeleteForUserAsync(userId, id);
-            if (!success) return NotFoundResponse("Appointment not found");
+            if (!success) return NotFound();
 
             _logger.LogInformation("Appointment deleted: AppointmentId={AppointmentId}, UserId={UserId}", id, userId);
             return NoContent();
