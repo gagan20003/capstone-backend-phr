@@ -1,11 +1,10 @@
-
-using System.Configuration;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PersonalHealthRecordManagement.Data;
+using PersonalHealthRecordManagement.Middleware;
 using PersonalHealthRecordManagement.Models;
 using PersonalHealthRecordManagement.Repositories;
 using PersonalHealthRecordManagement.Services;
@@ -30,6 +29,8 @@ namespace PersonalHealthRecordManagement
             {
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<AppDbContext>()
@@ -57,7 +58,7 @@ namespace PersonalHealthRecordManagement
             })
             .AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -78,6 +79,23 @@ namespace PersonalHealthRecordManagement
             builder.Services.AddScoped<JwtTokenService>();
 
             builder.Services.AddControllers();
+            
+            // CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "*" })
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                });
+            });
+
+            // Health Checks
+            builder.Services.AddHealthChecks()
+                .AddDbContextCheck<AppDbContext>();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -93,10 +111,18 @@ namespace PersonalHealthRecordManagement
                 app.UseSwaggerUI();
             }
 
+            // Global Exception Handler
+            app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
             app.UseHttpsRedirection();
 
+            app.UseCors();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
+            // Health Check endpoint
+            app.MapHealthChecks("/health");
 
             app.MapControllers();
 
@@ -111,19 +137,36 @@ namespace PersonalHealthRecordManagement
                 // Apply migrations (recommended to use dotnet ef migrations add / update in development)
                 try
                 {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogInformation("Applying database migrations...");
                     db.Database.Migrate();
+                    logger.LogInformation("Database migrations applied successfully.");
                 }
                 catch (Exception ex)
                 {
-                    // Log or handle migration failure
-                    Console.WriteLine("Migration error: " + ex.Message);
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while applying database migrations");
+                    // In production, you might want to fail fast or handle this differently
+                    if (!app.Environment.IsDevelopment())
+                    {
+                        throw;
+                    }
                 }
+                var logger = services.GetRequiredService<ILogger<Program>>();
                 var roles = new[] { "Admin", "User" };
                 foreach (var role in roles)
                 {
                     if (roleManager.Roles.FirstOrDefault(r => r.Name == role) == null)
                     {
-                        roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                        var result = roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                        if (result.Succeeded)
+                        {
+                            logger.LogInformation("Role '{Role}' created successfully", role);
+                        }
+                        else
+                        {
+                            logger.LogWarning("Failed to create role '{Role}': {Errors}", role, string.Join(", ", result.Errors.Select(e => e.Description)));
+                        }
                     }
                 }
             }

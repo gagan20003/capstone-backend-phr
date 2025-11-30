@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PersonalHealthRecordManagement.DTOs;
 using PersonalHealthRecordManagement.Models;
 using PersonalHealthRecordManagement.Services;
@@ -11,84 +7,106 @@ namespace PersonalHealthRecordManagement.Controllers
 {
     [ApiController]
     [Route("api/records")]
-    [Authorize] // all endpoints require authenticated user
-    public class RecordsController : ControllerBase
+    public class RecordsController : BaseController
     {
         private readonly IMedicalRecordService _medicalRecordService;
+        private readonly ILogger<RecordsController> _logger;
 
-        public RecordsController(IMedicalRecordService medicalRecordService)
+        public RecordsController(IMedicalRecordService medicalRecordService, ILogger<RecordsController> logger)
         {
             _medicalRecordService = medicalRecordService;
+            _logger = logger;
         }
 
-        private string? GetCurrentUserId()
-        {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier);
-        }
-
-        // GET /api/records
-        // Get all records for logged-in user
+        /// <summary>
+        /// Get all medical records for the logged-in user
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<MedicalRecords>>> GetMyRecords()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (userId == null) return UnauthorizedResponse();
 
             var records = await _medicalRecordService.GetForUserAsync(userId);
             return Ok(records);
         }
 
-        // GET /api/records/{id}
-        // Get details of a specific record
+        /// <summary>
+        /// Get details of a specific medical record
+        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<ActionResult<MedicalRecords>> GetMyRecord(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (userId == null) return UnauthorizedResponse();
 
             var record = await _medicalRecordService.GetByIdForUserAsync(userId, id);
-            if (record == null) return NotFound();
+            if (record == null) return NotFoundResponse("Medical record not found");
 
             return Ok(record);
         }
 
-        // POST /api/records
-        // Add a new medical record
+        /// <summary>
+        /// Add a new medical record
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<MedicalRecords>> CreateRecord([FromBody] CreateUpdateMedicalRecordDto dto)
         {
-            var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
 
-            var created = await _medicalRecordService.CreateForUserAsync(userId, dto);
-            return CreatedAtAction(nameof(GetMyRecord), new { id = created.RecordId }, created);
+            var userId = GetCurrentUserId();
+            if (userId == null) return UnauthorizedResponse();
+
+            try
+            {
+                var created = await _medicalRecordService.CreateForUserAsync(userId, dto);
+                _logger.LogInformation("Medical record created: RecordId={RecordId}, UserId={UserId}", created.RecordId, userId);
+                return CreatedAtAction(nameof(GetMyRecord), new { id = created.RecordId }, created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating medical record for UserId={UserId}", userId);
+                throw;
+            }
         }
 
-        // PUT /api/records/{id}
-        // Update record details
+        /// <summary>
+        /// Update medical record details
+        /// </summary>
         [HttpPut("{id:int}")]
         public async Task<ActionResult<MedicalRecords>> UpdateRecord(int id, [FromBody] CreateUpdateMedicalRecordDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
+
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (userId == null) return UnauthorizedResponse();
 
             var updated = await _medicalRecordService.UpdateForUserAsync(userId, id, dto);
-            if (updated == null) return NotFound();
+            if (updated == null) return NotFoundResponse("Medical record not found");
 
+            _logger.LogInformation("Medical record updated: RecordId={RecordId}, UserId={UserId}", id, userId);
             return Ok(updated);
         }
 
-        // DELETE /api/records/{id}
-        // Delete a record
+        /// <summary>
+        /// Delete a medical record
+        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteRecord(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (userId == null) return UnauthorizedResponse();
 
             var success = await _medicalRecordService.DeleteForUserAsync(userId, id);
-            if (!success) return NotFound();
+            if (!success) return NotFoundResponse("Medical record not found");
 
+            _logger.LogInformation("Medical record deleted: RecordId={RecordId}, UserId={UserId}", id, userId);
             return NoContent();
         }
     }

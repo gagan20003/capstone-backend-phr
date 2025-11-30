@@ -23,7 +23,8 @@ namespace PersonalHealthRecordManagement.Models
         public DateTime AppointmentDate { get; set; }
 
         [MaxLength(20)]
-        public string status { get; set; } = "Pending";
+        [Column("STATUS")]
+        public string Status { get; set; } = "Pending";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

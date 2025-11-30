@@ -40,7 +40,7 @@ namespace PersonalHealthRecordManagement.Services
                 DoctorName = dto.DoctorName,
                 Purpose = dto.Purpose,
                 AppointmentDate = dto.AppointmentDate,
-                status = dto.Status ?? "Scheduled",
+                Status = dto.Status ?? "Scheduled",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -64,7 +64,7 @@ namespace PersonalHealthRecordManagement.Services
 
             if (!string.IsNullOrWhiteSpace(dto.Status))
             {
-                appointment.status = dto.Status;
+                appointment.Status = dto.Status;
             }
 
             await _appointmentRepository.UpdateAsync(appointment);
