@@ -38,7 +38,7 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<MedicalRecords>> GetMyRecord(int id)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
+            if (userId == null) return UnauthorizedResponse<MedicalRecords>();
 
             var record = await _medicalRecordService.GetByIdForUserAsync(userId, id);
             if (record == null) return NotFoundResponse<MedicalRecords>("Medical record not found");
@@ -58,7 +58,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
+            if (userId == null) return UnauthorizedResponse<MedicalRecords>();
 
             try
             {
@@ -85,7 +85,7 @@ namespace PersonalHealthRecordManagement.Controllers
             }
 
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse<List<MedicalRecords>>();
+            if (userId == null) return UnauthorizedResponse<MedicalRecords>();
 
             var updated = await _medicalRecordService.UpdateForUserAsync(userId, id, dto);
             if (updated == null) return NotFoundResponse<MedicalRecords>("Medical record not found");

@@ -58,7 +58,7 @@ namespace PersonalHealthRecordManagement.Controllers
         public async Task<ActionResult<List<Appointments>>> GetAppointments()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return UnauthorizedResponse<Appointments>();
+            if (userId == null) return UnauthorizedResponse<List<Appointments>>();
 
             var appointments = await _appointmentService.GetForUserAsync(userId);
             return Ok(appointments);

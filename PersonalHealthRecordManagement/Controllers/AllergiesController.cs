@@ -88,7 +88,7 @@ namespace PersonalHealthRecordManagement.Controllers
             if (userId == null) return UnauthorizedResponse<Allergies>();
 
             var updated = await _allergyService.UpdateForUserAsync(userId, id, dto);
-            if (updated == null) return NotFoundResponse("Allergy not found");
+            if (updated == null) return NotFoundResponse<Allergies>("Allergy not found");
 
             _logger.LogInformation("Allergy updated: AllergyId={AllergyId}, UserId={UserId}", id, userId);
             return Ok(updated);
