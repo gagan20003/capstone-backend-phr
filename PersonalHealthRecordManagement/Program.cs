@@ -45,6 +45,7 @@ namespace PersonalHealthRecordManagement
             builder.Services.AddTransient<IAllergyService, AllergyService>();
             builder.Services.AddTransient<IMedicationRepository, MedicationRepository>();
             builder.Services.AddTransient<IMedicationService, MedicationService>();
+            builder.Services.AddTransient<AuthService>();
 
 
             // JWT
