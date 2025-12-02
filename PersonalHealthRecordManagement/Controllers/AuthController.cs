@@ -80,9 +80,16 @@ namespace PersonalHealthRecordManagement.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
             var token = _jwtService.CreateToken(user, roles);
+
+            var userDetails = new
+            {
+                Name = user?.FullName,
+                Email = user?.Email
+            };
+
             _logger.LogInformation("User logged in successfully: {Email}", dto.Email);
 
-            return Ok(new { token });
+            return Ok(new { token, userDetails });
         }
     }
 }

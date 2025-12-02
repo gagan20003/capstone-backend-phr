@@ -18,6 +18,7 @@ namespace PersonalHealthRecordManagement.Repositories
             return await _context.UserProfiles
                 .Include(p => p.Allergies)
                 .Include(p => p.Medications)
+                .Include(p=> p.User)
                 .FirstOrDefaultAsync(p => p.UserId == userId);
         }
         public async Task<UserProfile?> GetByIdAsync(int id)
@@ -25,6 +26,7 @@ namespace PersonalHealthRecordManagement.Repositories
             return await _context.UserProfiles
                 .Include(p => p.Allergies)
                 .Include(p => p.Medications)
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.UserProfileId == id);
         }
 
