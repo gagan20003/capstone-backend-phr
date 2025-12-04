@@ -13,7 +13,6 @@ namespace PersonalHealthRecordManagement.Models
         [Required]
         public string UserId { get; set; } = null!;
 
-        [JsonIgnore]
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser User { get; set; } = null!;
 

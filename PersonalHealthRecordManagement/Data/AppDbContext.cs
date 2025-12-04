@@ -1,63 +1,4 @@
-﻿//using System.Diagnostics.Contracts;
-//using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-//using Microsoft.EntityFrameworkCore;
-//using Microsoft.EntityFrameworkCore.Metadata;
-//using PersonalHealthRecordManagement.Models;
-
-//namespace PersonalHealthRecordManagement.Data
-//{
-//    public class AppDbContext : IdentityDbContext<ApplicationUser>
-//    {
-
-//        // Define tables below for migrations
-//        public DbSet<Appointments> Appointments { get; set; }
-//        public DbSet<MedicalRecords> MedicalRecords { get; set; }
-
-
-
-//        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-//        {
-
-//        }
-
-//        protected override void OnModelCreating(ModelBuilder modelBuilder)
-//        {
-//            base.OnModelCreating(modelBuilder);
-
-//            // Convert ALL bool properties to NUMBER(1)
-//            foreach (var entity in modelBuilder.Model.GetEntityTypes())
-//            {
-//                foreach (var property in entity.GetProperties())
-//                {
-//                    if (property.ClrType == typeof(bool) || property.ClrType == typeof(bool?))
-//                    {
-//                        property.SetColumnType("NUMBER(1)");
-//                    }
-//                }
-//            }
-
-
-//            foreach (var entity in modelBuilder.Model.GetEntityTypes())
-//            {
-//                // TABLE name => UPPERCASE
-//                entity.SetTableName(entity.GetTableName().ToUpper());
-
-//                // COLUMN names => UPPERCASE
-//                foreach (var prop in entity.GetProperties())
-//                {
-//                    var tableName = entity.GetTableName();
-//                    var columnName =
-//                    prop.GetColumnName(StoreObjectIdentifier.Table(tableName, entity.GetSchema()));
-//                    prop.SetColumnName(columnName.ToUpper());
-//                }
-//            }
-
-//        }
-//    }
-//}
-
-
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using PersonalHealthRecordManagement.Models;
@@ -96,16 +37,16 @@ namespace PersonalHealthRecordManagement.Data
                 .IsUnique();
 
             // ApplicationUser 1–many Appointments
-            modelBuilder.Entity<ApplicationUser>()
-                .HasMany(u => u.Appointments)
-                .WithOne(a => a.User)
+            modelBuilder.Entity<Appointments>()
+                .HasOne(a => a.User)
+                .WithMany()
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ApplicationUser 1–many MedicalRecords
-            modelBuilder.Entity<ApplicationUser>()
-                .HasMany(u => u.MedicalRecords)
-                .WithOne(r => r.User)
+            modelBuilder.Entity<MedicalRecords>()
+                .HasOne(r => r.User)
+                .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 

@@ -34,13 +34,20 @@ namespace PersonalHealthRecordManagement.Services
 
         public async Task<Appointments> CreateForUserAsync(string userId, CreateUpdateAppointmentDto dto)
         {
+
+            if (dto.AppointmentDate < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Appointment date cannot be in the past.");
+            }
+
+
             var appointment = new Appointments
             {
                 UserId = userId,
                 DoctorName = dto.DoctorName,
                 Purpose = dto.Purpose,
                 AppointmentDate = dto.AppointmentDate,
-                status = dto.Status ?? "Scheduled",
+                Status = dto.Status ?? "Scheduled",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -64,7 +71,7 @@ namespace PersonalHealthRecordManagement.Services
 
             if (!string.IsNullOrWhiteSpace(dto.Status))
             {
-                appointment.status = dto.Status;
+                appointment.Status = dto.Status;
             }
 
             await _appointmentRepository.UpdateAsync(appointment);

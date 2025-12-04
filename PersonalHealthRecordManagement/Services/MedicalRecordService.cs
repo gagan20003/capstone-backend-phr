@@ -34,6 +34,13 @@ namespace PersonalHealthRecordManagement.Services
 
         public async Task<MedicalRecords> CreateForUserAsync(string userId, CreateUpdateMedicalRecordDto dto)
         {
+
+            if (string.IsNullOrWhiteSpace(dto.FileUrl))
+            {
+                throw new ArgumentException("FileUrl cannot be empty.");
+            }
+
+
             var record = new MedicalRecords
             {
                 UserId = userId,

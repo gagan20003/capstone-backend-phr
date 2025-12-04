@@ -39,7 +39,12 @@ namespace PersonalHealthRecordManagement.Services
 
 
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtConfig["ExpiresMinutes"]!));
+            
+            if (!int.TryParse(jwtConfig["ExpiresMinutes"], out var expiresMinutes) || expiresMinutes <= 0)
+            {
+                expiresMinutes = 2880; // Default to 48 hours if invalid
+            }
+            var expires = DateTime.UtcNow.AddMinutes(expiresMinutes);
 
 
             var token = new JwtSecurityToken(
