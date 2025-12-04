@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using PersonalHealthRecordManagement.DTOs;
 using PersonalHealthRecordManagement.Models;
 using PersonalHealthRecordManagement.Services;
@@ -59,6 +60,11 @@ namespace PersonalHealthRecordManagement.Controllers
         {
             var userId = GetCurrentUserId();
             if (userId == null) return UnauthorizedResponse<List<Appointments>>();
+
+            //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
 
             var appointments = await _appointmentService.GetForUserAsync(userId);
             return Ok(appointments);

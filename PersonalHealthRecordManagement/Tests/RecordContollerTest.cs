@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -21,49 +22,72 @@ namespace PersonalHealthRecordManagement.Tests.Controllers
             _loggerMock = new Mock<ILogger<RecordsController>>();
         }
 
-        // Helper: controller with fake logged-in user
+        /// <summary>
+        /// Helper to create controller with a fake logged-in user
+        /// </summary>
         private RecordsController CreateControllerWithUser(string userId)
         {
-            var controller = new RecordsController(medicalRecordService: _serviceMock.Object,
-            logger: _loggerMock.Object);
-
-            var user = new ClaimsPrincipal(
-            new ClaimsIdentity(
-            new[] { new Claim(ClaimTypes.NameIdentifier, userId) },
-            "TestAuth"));
-
+            var controller = new RecordsController(_serviceMock.Object, _loggerMock.Object);
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "TestAuth"));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
-
             return controller;
         }
 
+        // ✅ GET: api/records
         [Fact]
         public async Task GetMyRecords_ShouldReturnOk_WithList()
         {
-            // ARRANGE
             const string userId = "user-123";
-            var controller = CreateControllerWithUser(userId);
+            var controller = CreateControllerWithUser(userId); // ensures HttpContext and User are set
 
             var list = new List<MedicalRecords>
-{
-new MedicalRecords { RecordId = 1, UserId = userId },
-new MedicalRecords { RecordId = 2, UserId = userId }
-};
+            {
+                new MedicalRecords { RecordId = 1, UserId = userId },
+                new MedicalRecords { RecordId = 2, UserId = userId }
+            };
 
-            _serviceMock
-            .Setup(s => s.GetForUserAsync(userId))
-            .ReturnsAsync(list);
+            _serviceMock.Setup(s => s.GetForUserAsync(userId)).ReturnsAsync(list);
 
-            // ACT
             var actionResult = await controller.GetMyRecords();
 
-            // ASSERT
             var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
             var returned = Assert.IsAssignableFrom<List<MedicalRecords>>(okResult.Value);
             Assert.Equal(2, returned.Count);
         }
+
+        [Fact]
+        public async Task GetMyRecords_ShouldReturnOk_WhenEmpty()
+        {
+            const string userId = "user-123";
+            var controller = CreateControllerWithUser(userId);
+
+            _serviceMock.Setup(s => s.GetForUserAsync(userId)).ReturnsAsync(new List<MedicalRecords>());
+
+            var actionResult = await controller.GetMyRecords();
+
+            var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+            var returned = Assert.IsAssignableFrom<List<MedicalRecords>>(okResult.Value);
+            Assert.Empty(returned);
+        }
+
+        [Fact]
+        public async Task GetMyRecords_ShouldReturnUnauthorized_WhenNoUser()
+        {
+            var controller = new RecordsController(_serviceMock.Object, _loggerMock.Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext() // HttpContext initialized, but User is empty
+            };
+
+            var actionResult = await controller.GetMyRecords();
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(actionResult.Result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
+        }
+
+
     }
 }

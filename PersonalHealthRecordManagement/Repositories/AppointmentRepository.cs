@@ -15,7 +15,7 @@ namespace PersonalHealthRecordManagement.Repositories
         {
             _context = context;
         }
-
+        
         public async Task<List<Appointments>> GetByUserIdAsync(string userId)
         {
             return await _context.Appointments

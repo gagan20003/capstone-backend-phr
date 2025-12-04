@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿
+using Xunit;
 using Moq;
 using FluentAssertions;
 using PersonalHealthRecordManagement.Services;
@@ -24,10 +25,10 @@ namespace PersonalHealthRecordManagement.Tests.Services
         {
             var userId = "USER1";
             var records = new List<MedicalRecords>
-{
-new MedicalRecords { RecordId = 1, UserId = userId },
-new MedicalRecords { RecordId = 2, UserId = userId }
-};
+            {
+                new MedicalRecords { RecordId = 1, UserId = userId },
+                new MedicalRecords { RecordId = 2, UserId = userId }
+            };
 
             _repoMock.Setup(x => x.GetByUserIdAsync(userId)).ReturnsAsync(records);
 
@@ -35,6 +36,18 @@ new MedicalRecords { RecordId = 2, UserId = userId }
 
             result.Should().NotBeNull();
             result.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public async Task GetAllRecords_ShouldReturnEmpty_WhenNoRecords()
+        {
+            var userId = "USER1";
+            _repoMock.Setup(x => x.GetByUserIdAsync(userId)).ReturnsAsync(new List<MedicalRecords>());
+
+            var result = await _service.GetForUserAsync(userId);
+
+            result.Should().NotBeNull();
+            result.Should().BeEmpty();
         }
 
         [Fact]
@@ -54,6 +67,39 @@ new MedicalRecords { RecordId = 2, UserId = userId }
             result.Should().NotBeNull();
             _repoMock.Verify(x => x.AddAsync(It.IsAny<MedicalRecords>()), Times.Once);
             _repoMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateRecord_ShouldThrow_WhenFileUrlMissing()
+        {
+            var userId = "USER1";
+            var dto = new CreateUpdateMedicalRecordDto
+            {
+                Provider = "AIIMS",
+                RecordType = "Test",
+                FileUrl = "",
+                RecordDate = DateTime.UtcNow
+            };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateForUserAsync(userId, dto));
+        }
+
+        [Fact]
+        public async Task CreateRecord_ShouldThrow_WhenRepositoryFails()
+        {
+            var userId = "USER1";
+            var dto = new CreateUpdateMedicalRecordDto
+            {
+                Provider = "AIIMS",
+                RecordType = "Test",
+                FileUrl = "file.pdf",
+                RecordDate = DateTime.UtcNow
+            };
+
+            _repoMock.Setup(x => x.AddAsync(It.IsAny<MedicalRecords>()))
+                .ThrowsAsync(new Exception("DB error"));
+
+            await Assert.ThrowsAsync<Exception>(() => _service.CreateForUserAsync(userId, dto));
         }
     }
 }

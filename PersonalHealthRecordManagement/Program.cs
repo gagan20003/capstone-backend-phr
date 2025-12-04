@@ -35,6 +35,8 @@ namespace PersonalHealthRecordManagement
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+            // use AddScopped for DI - suggested by panel
             builder.Services.AddTransient<IUserProfileRepository, UserProfileRepository>();
             builder.Services.AddTransient<IUserProfileService, UserProfileService>();
             builder.Services.AddTransient<IMedicalRecordRepository, MedicalRecordRepository>();
@@ -46,7 +48,7 @@ namespace PersonalHealthRecordManagement
             builder.Services.AddTransient<IMedicationRepository, MedicationRepository>();
             builder.Services.AddTransient<IMedicationService, MedicationService>();
             builder.Services.AddTransient<AuthService>();
-
+            
 
             // JWT
             var jwtSection = configuration.GetSection("Jwt");
@@ -84,9 +86,9 @@ namespace PersonalHealthRecordManagement
             // CORS
             builder.Services.AddCors(options =>
             {
-                options.AddDefaultPolicy(policy =>
+                options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "*" })
+                    policy.WithOrigins("http://localhost:5173", "http://localhost:6600")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
@@ -123,7 +125,7 @@ namespace PersonalHealthRecordManagement
 
             app.UseHttpsRedirection();
 
-            app.UseCors();
+            app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -143,7 +145,6 @@ namespace PersonalHealthRecordManagement
 
                 var logger = services.GetRequiredService<ILogger<Program>>();
                 
-                // Apply migrations (recommended to use dotnet ef migrations add / update in development)
                 try
                 {
                     logger.LogInformation("Applying database migrations...");
@@ -153,7 +154,6 @@ namespace PersonalHealthRecordManagement
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "An error occurred while applying database migrations");
-                    // In production, you might want to fail fast or handle this differently
                     if (!app.Environment.IsDevelopment())
                     {
                         throw;

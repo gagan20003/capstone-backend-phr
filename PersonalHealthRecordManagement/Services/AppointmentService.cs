@@ -34,6 +34,13 @@ namespace PersonalHealthRecordManagement.Services
 
         public async Task<Appointments> CreateForUserAsync(string userId, CreateUpdateAppointmentDto dto)
         {
+
+            if (dto.AppointmentDate < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Appointment date cannot be in the past.");
+            }
+
+
             var appointment = new Appointments
             {
                 UserId = userId,
