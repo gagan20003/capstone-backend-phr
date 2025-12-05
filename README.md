@@ -192,38 +192,6 @@ flowchart TB
 
 ---
 
-### Request / Response Flow Diagram (Example: Get My Medical Records)
-
-![Request Response Flow Diagram](diagrams/request-response-flow-diagram.png)
-
-*Figure 4: Sequence diagram illustrating the request/response flow for retrieving medical records.*
-
-```mermaid
-sequenceDiagram
-    participant FE as Frontend Client
-    participant API as ASP.NET Core Pipeline
-    participant CTRL as RecordsController
-    participant SRV as MedicalRecordService
-    participant REPO as MedicalRecordRepository
-    participant CTX as AppDbContext
-    participant DB as Oracle DB
-
-    FE->>API: GET /api/records<br/>Authorization: Bearer &lt;JWT&gt;
-    API->>CTRL: Route request after<br/>Auth + Authorization
-
-    CTRL->>CTRL: GetCurrentUserId() from JWT claims
-    CTRL->>SRV: GetForUserAsync(userId)
-    SRV->>REPO: GetByUserIdAsync(userId)
-    REPO->>CTX: Query MedicalRecords by userId
-    CTX->>DB: Execute SQL
-    DB-->>CTX: Records data
-    CTX-->>REPO: Materialized entities
-    REPO-->>SRV: List&lt;MedicalRecords&gt;
-    SRV-->>CTRL: List&lt;MedicalRecords&gt;
-    CTRL-->>FE: 200 OK + JSON body
-```
-
----
 
 ## Domain Model (Key Entities & Relationships)
 
@@ -822,4 +790,5 @@ dotnet test
   - Implement refresh tokens or multi-factor auth as needed.
 
 ---
+
 
